@@ -1,0 +1,6 @@
+/config.ini
+/others.json
+/partkeepr.json
+/resistors.json
+/capacitors.json
+*.log

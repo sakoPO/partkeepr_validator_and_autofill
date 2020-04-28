@@ -1,0 +1,3 @@
+[submodule "third-party/partname-resolver"]
+	path = third_party/partname-resolver
+	url = https://github.com/sakoPO/partname-resolver.git
