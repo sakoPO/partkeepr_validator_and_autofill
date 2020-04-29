@@ -4,6 +4,7 @@ import sys
 import json
 from decimal import Decimal
 import time
+from .part import Part
 
 
 class DecimalEncoder(json.JSONEncoder):
@@ -13,17 +14,41 @@ class DecimalEncoder(json.JSONEncoder):
         return super(DecimalEncoder, self).default(obj)
 
 
+class Units:
+    def __init__(self, units):
+        self.units = units
+
+    def get(self, name):
+        for unit in self.units:
+            if name == unit['name']:
+                return unit
+
+
 class Partkeepr:
-    def __init__(self, config, debug=False):
+    def __init__(self, config, debug=False, noEdit=False):
         self.config = config
         self.debug = debug
+        self.noEdit = noEdit
         timestr = time.strftime("%Y_%m_%d-%H_%M_%S")
         self.log = open("partkeepr_" + timestr + ".log", 'w')
 
     def __del__(self):
         self.log.close()
 
-    def set_part_description(self, part_id, description):
+    def get_part(self, part_id):
+        params = {"itemsPerPage": 9999}
+        response = self.api_call('get', '/api/parts/' + part_id, params=params)
+        request = self.__convert_part_response_to_put_request(response.json())
+        return Part(part_id, request, self.__get_units())
+
+    def update_part(self, part):
+        id = part.get_id()
+        print("Updating part:", id)
+        r = self.api_call('put', '/api/parts/' + id, json=part.request)
+        r.raise_for_status()
+        return r
+
+    def edit_part_description(self, part_id, description):
         if part_id.startswith("/api/parts/"):
             part_id = part_id.replace("/api/parts/", "")
             response = self.get_component(part_id)
@@ -62,9 +87,34 @@ class Partkeepr:
                 new_parameter = update_value(old_parameter, value)
                 if old_parameter["valueType"] == "numeric":
                     self.log.write("Updating " + parameter_name + " parameter of part: " + part_id +
-                                   ", old parameter: " + str(old_parameter) + ", new parameter: " + str(new_parameter) + "\n")
+                                   ", old parameter: " + str(old_parameter) + ", new parameter: " + str(
+                        new_parameter) + "\n")
                     r = self.api_call('put', '/api/parts/' + part_id, json=request)
                     r.raise_for_status()
+
+    def find_part_parameter(self, name):
+        r = self.api_call('get', '/api/parts/getPartParameterNames')
+        found = []
+        for parameter in r.json():
+            if parameter["name"] == name:
+                found.append(parameter)
+        return found
+
+    def get_component_request(self, part_id):
+        if part_id.startswith("/api/parts/"):
+            part_id = part_id.replace("/api/parts/", "")
+            response = self.get_component(part_id)
+            return self.__convert_part_response_to_put_request(response)
+
+    def get_unit(self, name):
+        units = self.__get_units()
+        return units.get(name)
+
+    def __get_units(self):
+        params = {"itemsPerPage": 9999}
+        r = self.api_call('get', '/api/units', params=params)
+        rj = r.json()
+        return Units(rj['hydra:member'])
 
     def api_call(self, method, url, **kwargs):
         """calls Partkeepr API
@@ -75,6 +125,9 @@ class Partkeepr:
         :returns: requests object
 
         """
+
+        if self.noEdit and method != 'get':
+            return
         pk_user = self.config["partkeepr"]["user"]
         pk_pwd = self.config["partkeepr"]["pwd"]
         pk_url = self.config["partkeepr"]["url"]
