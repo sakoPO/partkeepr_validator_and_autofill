@@ -96,12 +96,10 @@ class TestCapacitors(TestCase):
                     tolerance = capacitanceTolerance_from_partkeepr_json(capacitor["parameters"]["Tolerance"])
                     decoded_parameters = capacitorPartname.resolve(manufacturer_part_number)
                     self.assertIsNotNone(decoded_parameters)
-                    self.assertEqual(Capacitance(decimal.Decimal(parameters["Capacitance"]["value"])),
-                                     decoded_parameters.capacitance)
-                    self.assertEqual(parameters["Voltage"]["value"] + "V",
-                                     decoded_parameters.voltage.replace("DC", ""))
-                    self.assertEqual(parameters["Dielectric Type"]["value"], decoded_parameters.dielectric_type)
-                    self.assertEqual(tolerance, decoded_parameters.tolerance)
+                    self.assertEqual(decoded_parameters.capacitance, capacitance_from_partkeepr_parameters(parameters))
+                    self.assertEqual(decoded_parameters.voltage.replace("DC", ""), parameters["Voltage"]["value"] + "V")
+                    self.assertEqual(decoded_parameters.dielectric_type, parameters["Dielectric Type"]["value"] if "Dielectric Type" in parameters else None)
+                    self.assertEqual(decoded_parameters.tolerance, tolerance)
                     # cap = Capacitor(capacitor_type=parameters["Capacitor type"],
                     #                manufacturer=capacitor["manufacturers"][0]['name'],
                     #                partnumber=manufacturer_part_number,
