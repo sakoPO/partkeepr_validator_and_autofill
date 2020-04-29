@@ -67,6 +67,14 @@ def capacitanceTolerance_from_partkeepr_json(tolerance_json):
             return CapacitanceTolerance(str(tolerance_json["valueMin"]) + "%", "+" + str(tolerance_json["valueMax"]) + "%")
 
 
+def capacitance_from_partkeepr_parameters(parameters):
+    if "Capacitance" in parameters:
+        if parameters["Capacitance"]['value'] is not None:
+            return Capacitance(parameters["Capacitance"]['value'])
+        else:
+            return CapacitanceRange(parameters["Capacitance"]["valueMin"], parameters["Capacitance"]["valueMax"])
+
+
 def capacitor_from_partkeepr_json(capacitor_json):
     try:
         parameters = capacitor_json["parameters"]
@@ -77,10 +85,7 @@ def capacitor_from_partkeepr_json(capacitor_json):
             part_number = capacitor_json['name']
             manufacturer_name = None
         capacitor_type = Capacitor.Type(parameters["Capacitor Type"]['value'])
-        if capacitor_type == Capacitor.Type.CeramicTrimmer:
-            capacitance = CapacitanceRange(parameters["Capacitance"]["valueMin"], parameters["Capacitance"]["valueMax"])
-        else:
-            capacitance = parameters["Capacitance"]["value"]
+        capacitance = capacitance_from_partkeepr_parameters(parameters)
         working_temperature = working_temperature_range_from_partkeepr_json(parameters)
         if 'Voltage' in parameters:
             if parameters['Voltage']['valueMax'] is not None:
