@@ -35,16 +35,16 @@ class AutofillDescription:
             if resistor_from_partname is not None:
                 if resistor_from_parameters.partial_compare(resistor_from_partname):
                     if resistor["description"] != resistor_from_partname.get_description():
-                        self.partkeepr.set_part_description(resistor["partkeepr_id"],
-                                                            resistor_from_partname.get_description())
+                        self.partkeepr.edit_part_description(resistor["partkeepr_id"],
+                                                             resistor_from_partname.get_description())
                 else:
                     print("Unable to update description, part parameters are different than parameters from part name")
                     print("From part name:", resistor_from_partname)
                     print("From parameters:", resistor_from_parameters)
             else:
                 if resistor["description"] != resistor_from_parameters.get_description():
-                    self.partkeepr.set_part_description(resistor["partkeepr_id"],
-                                                        resistor_from_parameters.get_description())
+                    self.partkeepr.edit_part_description(resistor["partkeepr_id"],
+                                                         resistor_from_parameters.get_description())
 
     def autofill_capacitors_description(self):
         for capacitor in self.capacitors:
@@ -62,8 +62,8 @@ class AutofillDescription:
                     if capacitor["description"] != capacitor_from_partname.get_description():
                         print("Updating description, from:", capacitor["description"], ", to:",
                               capacitor_from_parameters.get_description())
-                        self.partkeepr.set_part_description(capacitor["partkeepr_id"],
-                                                            capacitor_from_partname.get_description())
+                        self.partkeepr.edit_part_description(capacitor["partkeepr_id"],
+                                                             capacitor_from_partname.get_description())
                 else:
                     print("Unable to update description, part parameters are different than parameters from part name")
                     print("\tFrom part name:", capacitor_from_partname)
@@ -72,28 +72,5 @@ class AutofillDescription:
                 if capacitor["description"] != capacitor_from_parameters.get_description():
                     print("Updating description, from:", capacitor["description"], ", to:",
                           capacitor_from_parameters.get_description())
-                    self.partkeepr.set_part_description(capacitor["partkeepr_id"],
-                                                        capacitor_from_parameters.get_description())
-
-    def edit_power_parameter(self):
-        for resistor in self.resistors:
-            if resistor['partkeepr_id'] in skip_autofill.autofill_description:
-                print("Skipping parameter update of part: ", resistor['partkeepr_id'], " found in skip list.")
-                continue
-            if len(resistor['manufacturers']):
-                manufacturer_part_number = resistor["manufacturers"][0]['partNumber']
-                resistor_from_partname = resistors_partname_decoder.resolve(manufacturer_part_number)
-                if resistor_from_partname is not None:
-                    resistor_from_parameters = resistor_from_partkeepr_json(resistor)
-                    if resistor_from_partname.power != resistor_from_parameters.power:
-                        print("Updating power parameter at: ", resistor['partkeepr_id'], "from: ",
-                              resistor_from_parameters.power, " to: ", resistor_from_partname.power)
-                        new_value = {'value': None,
-                                     'minValue': None,
-                                     'maxValue': resistor_from_partname.power}
-                        self.partkeepr.edit_part_parameter(resistor['partkeepr_id'], "Power", new_value)
-
-# test = AutofillDescription()
-# test.autofill_resistors_description()
-# test.autofill_capacitors_description()
-# test.edit_power_parameter()
+                    self.partkeepr.edit_part_description(capacitor["partkeepr_id"],
+                                                         capacitor_from_parameters.get_description())
