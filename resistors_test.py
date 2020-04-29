@@ -73,6 +73,18 @@ class TestResistors(TestCase):
                 self.assertIsNone(power["valueMin"])
                 self.assertIsNotNone(power["valueMax"])
 
+    def test_working_temperature_parameter(self):
+        for resistor in self.resistors:
+            with self.subTest(resistor['name'] + " (" + resistor['partkeepr_id'] + ')'):
+                if resistor['partkeepr_id'] in skip_resistors_test.test_working_temperature_parameter:
+                    self.skipTest(str(resistor['name']) + " part in skip list")
+                self.assertIn("Working Temperature", resistor["parameters"])
+                working_temperature = resistor["parameters"]["Working Temperature"]
+                self.assertEqual(working_temperature["unit"], "Celsius")
+                self.assertIsNone(working_temperature["value"])
+                self.assertIsNotNone(working_temperature["valueMin"])
+                self.assertIsNotNone(working_temperature["valueMax"])
+
     def test_footprint(self):
         for resistor in self.resistors:
             with self.subTest(resistor['name']):
