@@ -16,24 +16,6 @@ class TestResistors(TestCase):
         with open("resistors.json") as file:
             cls.resistors = json.load(file)
 
-    def test_single_manufacturer_per_part(self):
-        for resistor in self.resistors:
-            with self.subTest(resistor['name']):
-                if resistor['partkeepr_id'] in skip_resistors_test.test_single_manufacturer_per_part:
-                    self.skipTest("part in skip list")
-                self.assertEqual(len(resistor["manufacturers"]), 1)
-
-    def test_part_name_equal_manufacturer_part_name(self):
-        for resistor in self.resistors:
-            with self.subTest(resistor['name']):
-                if len(resistor["manufacturers"]) > 0:
-                    self.assertEqual(resistor["name"], resistor["manufacturers"][0]["partNumber"])
-
-    def test_has_production_remarks(self):
-        for resistor in self.resistors:
-            with self.subTest(resistor['name']):
-                self.assertIn(resistor["productionRemarks"], ["SMD", "SMT", "THT", "Screw"])
-
     def test_has_resistance_parameter(self):
         for resistor in self.resistors:
             with self.subTest(resistor['name']):
@@ -72,26 +54,6 @@ class TestResistors(TestCase):
                 self.assertIsNone(power["value"])
                 self.assertIsNone(power["valueMin"])
                 self.assertIsNotNone(power["valueMax"])
-
-    def test_working_temperature_parameter(self):
-        for resistor in self.resistors:
-            with self.subTest(resistor['name'] + " (" + resistor['partkeepr_id'] + ')'):
-                if resistor['partkeepr_id'] in skip_resistors_test.test_working_temperature_parameter:
-                    self.skipTest(str(resistor['name']) + " part in skip list")
-                self.assertIn("Working Temperature", resistor["parameters"])
-                working_temperature = resistor["parameters"]["Working Temperature"]
-                self.assertEqual(working_temperature["unit"], "Celsius")
-                self.assertIsNone(working_temperature["value"])
-                self.assertIsNotNone(working_temperature["valueMin"])
-                self.assertIsNotNone(working_temperature["valueMax"])
-
-    def test_footprint(self):
-        for resistor in self.resistors:
-            with self.subTest(resistor['name']):
-                if resistor["productionRemarks"] == "THT":
-                    self.assertTrue(True)
-                elif resistor["productionRemarks"] == "SMD":
-                    self.assertIn(resistor["footprint"], ["0402", "0603", "0805", "1206", "2512"])
 
     def test_description_format(self):
         for resistor in self.resistors:

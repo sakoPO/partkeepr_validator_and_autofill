@@ -2,11 +2,11 @@ from decimal import Decimal
 import sys
 
 sys.path.insert(1, "third_party/partname-resolver")
-from partname_resolver.resistors.resistor import Resistor
+from partname_resolver.components.resistor import Resistor
 from partname_resolver.units.resistanceTolerance import Tolerance as ResistanceTolerance
 from partname_resolver.units.temperature import TemperatureRange
 from partname_resolver.units.capacitanceTolerance import Tolerance as CapacitanceTolerance
-from partname_resolver.capacitors.capacitor import Capacitor
+from partname_resolver.components.capacitor import Capacitor
 from partname_resolver.units.capacitance import Capacitance, CapacitanceRange
 
 
