@@ -5,6 +5,7 @@ import json
 from decimal import Decimal
 import time
 from .part import Part
+from .partkeepr_units import Units
 
 
 class DecimalEncoder(json.JSONEncoder):
@@ -14,14 +15,6 @@ class DecimalEncoder(json.JSONEncoder):
         return super(DecimalEncoder, self).default(obj)
 
 
-class Units:
-    def __init__(self, units):
-        self.units = units
-
-    def get(self, name):
-        for unit in self.units:
-            if name == unit['name']:
-                return unit
 
 
 class Partkeepr:
@@ -227,23 +220,25 @@ class Partkeepr:
 
         resistors = []
         capacitors = []
+        inductors = []
         others = []
         for part in rj["hydra:member"]:
             if part["categoryPath"].startswith("Root Category ➤ Resistors"):
                 resistors.append(self.decode_part(part))
             elif part["categoryPath"].startswith("Root Category ➤ Capacitors"):
                 capacitors.append(self.decode_part(part))
+            elif part["categoryPath"].startswith("Root Category ➤ Inductors"):
+                inductors.append(self.decode_part(part))
             else:
                 others.append(part)
 
-        with open('resistors.json', 'w') as outputfile:
-            json.dump(resistors, outputfile, sort_keys=True, indent=4, cls=DecimalEncoder)
-
-        with open('capacitors.json', 'w') as outputfile:
-            json.dump(capacitors, outputfile, sort_keys=True, indent=4, cls=DecimalEncoder)
-
-        with open('others.json', 'w') as outputfile:
-            json.dump(others, outputfile, sort_keys=True, indent=4)
+        to_save = [{'filename': 'resistors.json', 'data': resistors},
+                   {'filename': 'capacitors.json', 'data': capacitors},
+                   {'filename': 'inductors.json', 'data': inductors},
+                   {'filename': 'others.json', 'data': others}]
+        for s in to_save:
+            with open(s['filename'], 'w') as outputfile:
+                json.dump(s['data'], outputfile, sort_keys=True, indent=4, cls=DecimalEncoder)
 
     def __convert_part_response_to_put_request(self, part):
         part.pop('@context')

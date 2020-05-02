@@ -1,3 +1,4 @@
+from .partkeepr_units import Units as PartkeeprUnits
 import sys
 
 sys.path.insert(1, "third_party/partname-resolver")
@@ -31,13 +32,41 @@ class Part:
     def get_id(self):
         return self.id
 
+    def get_name(self):
+        return self.request['name']
+
+    def get_manufacturers(self):
+        return self.request['manufacturers']
+
+    def add_manufacturer_and_partnumber(self, manufacturer, partnumber):
+        pass
+
+    def set_comment(self, comment):
+        self.request['comment'] = comment if comment is not None else ""
+
+    def get_comment(self):
+        return self.request['comment']
+
     def get_description(self):
         return self.request['description']
 
     def set_description(self, description):
-        self.request['description'] = description if description is not None else ""
+        if isinstance(description, str):
+            self.request['description'] = description if description is not None else ""
+        else:
+            raise TypeError
 
-    def add_parameter(self, name, value, description=None):
+    def get_footprint(self):
+        return self.request['footprint']
+
+    def set_footprint(self):
+        pass
+
+    def add_parameter(self, name, value, numeric_value_field='value', description=None):
+        def decimal_to_int_or_float(parameter_value):
+            return int(parameter_value) if float(parameter_value).is_integer() else float(parameter_value)
+
+        value_to_si_prefix = {'value': 'siPrefix', 'minValue': 'minSiPrefix', 'maxValue': 'maxSiPrefix'}
         if self.has_parameter(name) is False:
             parameter = dict(Part.parameter_template)
             parameter['name'] = name
@@ -52,25 +81,30 @@ class Part:
                     if unit is None:
                         raise ValueError
                     parameter["unit"] = unit
-                    parameter['value'] = value.get_value()
-                    # todo Add support for si prefixes
+                    prefix = value.get_closest_prefix(self.units.get_supported_prefixes(unit)['names'])
+                    parameter[numeric_value_field] = decimal_to_int_or_float(value.get_value_as(prefix))
+                    parameter[value_to_si_prefix[numeric_value_field]] = self.units.get_prefix(unit, prefix)
                 else:
-                    parameter['value'] = value.get_value()
+                    parameter[numeric_value_field] = decimal_to_int_or_float(value.get_value())
             elif isinstance(value, RangeBase):
                 parameter['valueType'] = 'numeric'
-                min = value.min.get_value()
-                max = value.max.get_value()
-                if value.min.name is not None:
+                min = value.min.get_value() if isinstance(value.min, Unit) else value.min
+                max = value.max.get_value() if isinstance(value.max, Unit) else value.max
+                if isinstance(value.min, Unit) and value.min.name is not None:
                     unit = self.units.get(value.min.name)
                     if unit is None:
                         raise ValueError
                     parameter["unit"] = unit
-                    parameter['minValue'] = int(min) if float(min).is_integer() else float(min)
-                    parameter['maxValue'] = int(max) if float(max).is_integer() else float(max)
-                    # todo Add support for si prefixes
+                    min_prefix = value.min.get_closest_prefix(self.units.get_supported_prefixes(unit)['names'])
+                    parameter['minValue'] = decimal_to_int_or_float(value.min.get_value_as(min_prefix))
+                    parameter['minSiPrefix'] = self.units.get_prefix(unit, min_prefix)
+
+                    max_prefix = value.max.get_closest_prefix(self.units.get_supported_prefixes(unit)['names'])
+                    parameter['maxValue'] = decimal_to_int_or_float(value.max.get_value_as(max_prefix))
+                    parameter['maxSiPrefix'] = self.units.get_prefix(unit, max_prefix)
                 else:
-                    parameter['minValue'] = int(min) if float(min).is_integer() else float(min)
-                    parameter['maxValue'] = int(max) if float(max).is_integer() else float(max)
+                    parameter['minValue'] = decimal_to_int_or_float(min)
+                    parameter['maxValue'] = decimal_to_int_or_float(max)
             else:
                 raise TypeError
             self.request['parameters'].insert(0, parameter)
