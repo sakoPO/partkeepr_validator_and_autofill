@@ -15,8 +15,6 @@ class DecimalEncoder(json.JSONEncoder):
         return super(DecimalEncoder, self).default(obj)
 
 
-
-
 class Partkeepr:
     def __init__(self, config, debug=False, noEdit=False):
         self.config = config
@@ -152,7 +150,8 @@ class Partkeepr:
         decoded = []
         for attachment in attachments:
             decoded.append({"filename": attachment["originalFilename"],
-                            "url": self.config["partkeepr"]["url"] + attachment["@id"] + "/getFile"})
+                            "url": self.config["partkeepr"]["url"] + attachment["@id"] + "/getFile",
+                            'description': attachment["description"]})
         return decoded
 
     def decode_parameters(self, parameters, partname):
