@@ -1,7 +1,10 @@
 from decimal import Decimal
 import sys
+import os
+from pathlib import Path
 
-sys.path.insert(1, "third_party/partname-resolver")
+partname_resolver_path = Path(os.path.dirname(os.path.realpath(__file__)) + '/third_party/partname-resolver')
+sys.path.insert(1, str(partname_resolver_path.resolve()))
 from partname_resolver.components.resistor import Resistor
 from partname_resolver.units.resistanceTolerance import Tolerance as ResistanceTolerance
 from partname_resolver.units.temperature import TemperatureRange
