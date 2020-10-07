@@ -217,24 +217,26 @@ class Partkeepr:
         with open('partkeepr.json', 'w') as outputfile:
             json.dump(rj, outputfile, sort_keys=True, indent=4)
 
-        resistors = []
-        capacitors = []
-        inductors = []
         others = []
-        for part in rj["hydra:member"]:
-            if part["categoryPath"].startswith("Root Category ➤ Resistors"):
-                resistors.append(self.decode_part(part))
-            elif part["categoryPath"].startswith("Root Category ➤ Capacitors"):
-                capacitors.append(self.decode_part(part))
-            elif part["categoryPath"].startswith("Root Category ➤ Inductors"):
-                inductors.append(self.decode_part(part))
-            else:
-                others.append(part)
 
-        to_save = [{'filename': 'resistors.json', 'data': resistors},
-                   {'filename': 'capacitors.json', 'data': capacitors},
-                   {'filename': 'inductors.json', 'data': inductors},
-                   {'filename': 'others.json', 'data': others}]
+        component_group = [[] for y in range(len(self.config["partkeepr component location"]))] 
+        for part in rj["hydra:member"]:
+            found = False
+            for i, key in enumerate(self.config["partkeepr component location"]):     
+                category = self.config["partkeepr component location"][key].replace('"', '')            
+                if part["categoryPath"].startswith(category):
+                    #print("Adding into", self.config["partkeepr component location"])
+                    component_group[i].append(self.decode_part(part))
+                    found = True
+                    break                
+
+            if found is False:
+                others.append(part)
+ 
+        to_save = [{'filename': 'others.json', 'data': others}]
+        for i, component_type in enumerate(self.config["partkeepr component location"]):
+            to_save.append({'filename': str(component_type) + '.json', 'data': component_group[i]})
+        
         for s in to_save:
             with open(s['filename'], 'w') as outputfile:
                 json.dump(s['data'], outputfile, sort_keys=True, indent=4, cls=DecimalEncoder)
